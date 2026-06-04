@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createGameEngine } from './game/gameEngine';
+import { createDefaultDdaSettings } from './game/ddaSettings';
 import DifficultyPanel from './components/DifficultyPanel';
 import DifficultyHistoryChart from './components/DifficultyHistoryChart';
+import DdaSettingsPanel from './components/DdaSettingsPanel';
 import './App.css';
 
 const INITIAL_HUD = {
@@ -13,6 +15,7 @@ const INITIAL_HUD = {
 
 const INITIAL_DDA = {
   message: '待機中',
+  ddaEnabled: true,
   spawnIntervalMs: 1200,
   enemyBulletSpeed: 4,
   enemyBulletCount: 4,
@@ -37,6 +40,7 @@ export default function App() {
   const [playing, setPlaying] = useState(false);
   const [hud, setHud] = useState(INITIAL_HUD);
   const [dda, setDda] = useState(INITIAL_DDA);
+  const [ddaSettings, setDdaSettings] = useState(createDefaultDdaSettings);
   const [finalStats, setFinalStats] = useState({
     score: 0,
     accuracy: '0%',
@@ -80,7 +84,7 @@ export default function App() {
     setPlaying(true);
     setHud(INITIAL_HUD);
     setDda(INITIAL_DDA);
-    engineRef.current?.start();
+    engineRef.current?.start(ddaSettings);
     canvasRef.current?.focus();
   };
 
@@ -128,13 +132,17 @@ export default function App() {
       <DifficultyPanel dda={dda} visible={playing} />
 
       <div className={`overlay ${showStart ? '' : 'hidden'}`}>
-        <div className="overlay-content glass">
+        <div className="overlay-content glass overlay-content-start">
           <h1 className="neon-text">AI NEON BLASTER</h1>
           <p className="description">
             AIがあなたのプレイを監視し、リアルタイムで難易度を最適化します。
             <br />
             [W/A/S/D] 移動 | [SPACE] 攻撃
           </p>
+          <DdaSettingsPanel
+            settings={ddaSettings}
+            onChange={setDdaSettings}
+          />
           <button
             type="button"
             className="premium-btn"

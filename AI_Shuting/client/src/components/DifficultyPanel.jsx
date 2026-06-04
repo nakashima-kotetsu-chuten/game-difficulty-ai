@@ -38,14 +38,23 @@ export default function DifficultyPanel({ dda, visible }) {
   const killDisplay =
     dda.killRate != null ? `${dda.killRate}%` : '—';
 
+  const ddaOn = dda.ddaEnabled !== false;
+
   return (
     <aside className="dda-panel glass" aria-label="難易度パラメータ">
       <div className="dda-panel-header">
-        <span className="label">DDA（10秒窓）</span>
-        <TrendBadge trend={dda.trend} delta={dda.delta} />
+        <span className="label">
+          {ddaOn ? 'DDA（10秒窓）' : 'DDA（無効）'}
+        </span>
+        {ddaOn && <TrendBadge trend={dda.trend} delta={dda.delta} />}
       </div>
 
       <p className="dda-message">{dda.message}</p>
+      {!ddaOn && (
+        <p className="dda-disabled-note">
+          スタート画面の設定どおり、難易度は固定です。
+        </p>
+      )}
 
       <div className="dda-section-title">直近テレメトリ</div>
       <div className="dda-row">

@@ -91,18 +91,16 @@ export function getTargetHitsPerPeriod() {
   return hitsToDie / periods;
 }
 
-export function clampEvenBulletCount(count) {
+export function clampEvenBulletCount(count, range = DDA_RANGES.enemyBulletCount) {
   const rounded = Math.round(count / 2) * 2;
-  return Math.max(
-    DDA_RANGES.enemyBulletCount.min,
-    Math.min(DDA_RANGES.enemyBulletCount.max, rounded)
-  );
+  return Math.max(range.min, Math.min(range.max, rounded));
 }
 
-/** 弾数を ±step（2）だけ変化 */
-export function stepBulletCount(current, deltaSteps) {
+/** 弾数を ±step だけ変化 */
+export function stepBulletCount(current, deltaSteps, range = DDA_RANGES.enemyBulletCount) {
   return clampEvenBulletCount(
-    current + deltaSteps * DDA_RANGES.enemyBulletCount.step
+    current + deltaSteps * range.step,
+    range
   );
 }
 

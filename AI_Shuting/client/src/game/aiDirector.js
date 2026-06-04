@@ -1,17 +1,13 @@
 /**
  * DDA（2軸・別タイミングで更新）
- * - 被弾数 → 弾数2〜4（±2・10秒に1回まで）・弾速・射撃間隔（10秒ごと）
- * - 撃墜率 → 出現間隔（10秒ごと、5秒ラグ）
+ * - 被弾数 → 弾数・弾速・射撃間隔
+ * - 撃墜率 → 出現間隔
  */
+import { FIXED, stepBulletCount } from './difficultyParams';
 import {
-  DDA_RANGES,
-  DDA_TARGETS,
-  DDA_TIMING,
-  FIXED,
-  stepBulletCount,
-  createInitialDifficultyState,
-  getTargetHitsPerPeriod,
-} from './difficultyParams';
+  createDefaultDdaSettings,
+  normalizeDdaSettings,
+} from './ddaSettings';
 
 function clamp(n, min, max) {
   return Math.max(min, Math.min(max, n));
@@ -22,36 +18,49 @@ function round2(n) {
 }
 
 export class AIDirector {
-  constructor() {
-    this.state = createInitialDifficultyState();
+  constructor(settings) {
+    this.config = normalizeDdaSettings(settings ?? createDefaultDdaSettings());
+    this.state = { ...this.config.initial };
     this.lastBulletMessage = '';
     this.lastSpawnMessage = '';
     this.lastBulletCountAdjustTime = 0;
+  }
+
+  applySettings(settings) {
+    this.config = normalizeDdaSettings(settings);
   }
 
   reset() {
-    this.state = createInitialDifficultyState();
+    this.state = { ...this.config.initial };
     this.lastBulletMessage = '';
     this.lastSpawnMessage = '';
     this.lastBulletCountAdjustTime = 0;
   }
 
+  getTargetHitsPerPeriod() {
+    const hitsToDie = FIXED.playerHp / FIXED.bulletHitDamage;
+    const periods =
+      this.config.targets.targetSurvivalMs / this.config.timing.cycleMs;
+    return hitsToDie / periods;
+  }
+
   getState() {
+    const r = this.config.ranges;
     const s = { ...this.state };
     s.spawnIntervalMs = clamp(
       s.spawnIntervalMs,
-      DDA_RANGES.spawnIntervalMs.min,
-      DDA_RANGES.spawnIntervalMs.max
+      r.spawnIntervalMs.min,
+      r.spawnIntervalMs.max
     );
     s.enemyFireIntervalMs = clamp(
       s.enemyFireIntervalMs,
-      DDA_RANGES.enemyFireIntervalMs.min,
-      DDA_RANGES.enemyFireIntervalMs.max
+      r.enemyFireIntervalMs.min,
+      r.enemyFireIntervalMs.max
     );
     s.enemyBulletSpeed = clamp(
       s.enemyBulletSpeed,
-      DDA_RANGES.enemyBulletSpeed.min,
-      DDA_RANGES.enemyBulletSpeed.max
+      r.enemyBulletSpeed.min,
+      r.enemyBulletSpeed.max
     );
     return s;
   }
@@ -59,53 +68,61 @@ export class AIDirector {
   /** @param {{ hits: number }} period @param {number} now */
   adjustBullets(period, now = performance.now()) {
     const prev = { ...this.state };
-    const targetHits = getTargetHitsPerPeriod();
+    const targetHits = this.getTargetHitsPerPeriod();
     const hitsRatio = period.hits / Math.max(targetHits, 0.05);
+    const { thresholds, ranges, timing } = this.config;
 
     let { enemyBulletCount, enemyFireIntervalMs, enemyBulletSpeed } =
       this.state;
     const canChangeCount =
-      now - this.lastBulletCountAdjustTime >=
-      DDA_TIMING.bulletCountMinIntervalMs;
+      now - this.lastBulletCountAdjustTime >= timing.bulletCountMinIntervalMs;
 
-    if (period.hits > 0 && hitsRatio > 1.1) {
+    if (period.hits > 0 && hitsRatio > thresholds.hitsRatioEase) {
       if (canChangeCount) {
-        const next = stepBulletCount(enemyBulletCount, -1);
+        const next = stepBulletCount(
+          enemyBulletCount,
+          -1,
+          ranges.enemyBulletCount
+        );
         if (next !== enemyBulletCount) {
           enemyBulletCount = next;
           this.lastBulletCountAdjustTime = now;
         }
       }
       enemyFireIntervalMs = clamp(
-        enemyFireIntervalMs + DDA_RANGES.enemyFireIntervalMs.step,
-        DDA_RANGES.enemyFireIntervalMs.min,
-        DDA_RANGES.enemyFireIntervalMs.max
+        enemyFireIntervalMs + ranges.enemyFireIntervalMs.step,
+        ranges.enemyFireIntervalMs.min,
+        ranges.enemyFireIntervalMs.max
       );
       enemyBulletSpeed = clamp(
-        enemyBulletSpeed - DDA_RANGES.enemyBulletSpeed.step,
-        DDA_RANGES.enemyBulletSpeed.min,
-        DDA_RANGES.enemyBulletSpeed.max
+        enemyBulletSpeed - ranges.enemyBulletSpeed.step,
+        ranges.enemyBulletSpeed.min,
+        ranges.enemyBulletSpeed.max
       );
       this.lastBulletMessage = canChangeCount
         ? 'HIGH DAMAGE — EASING BULLETS'
         : 'HIGH DAMAGE — EASING FIRE RATE';
-    } else if (hitsRatio < 0.75) {
+    } else if (hitsRatio < thresholds.hitsRatioHarder) {
       if (canChangeCount) {
-        const next = stepBulletCount(enemyBulletCount, 1);
+        const next = stepBulletCount(
+          enemyBulletCount,
+          1,
+          ranges.enemyBulletCount
+        );
         if (next !== enemyBulletCount) {
           enemyBulletCount = next;
           this.lastBulletCountAdjustTime = now;
         }
       }
       enemyFireIntervalMs = clamp(
-        enemyFireIntervalMs - DDA_RANGES.enemyFireIntervalMs.step,
-        DDA_RANGES.enemyFireIntervalMs.min,
-        DDA_RANGES.enemyFireIntervalMs.max
+        enemyFireIntervalMs - ranges.enemyFireIntervalMs.step,
+        ranges.enemyFireIntervalMs.min,
+        ranges.enemyFireIntervalMs.max
       );
       enemyBulletSpeed = clamp(
-        enemyBulletSpeed + DDA_RANGES.enemyBulletSpeed.step,
-        DDA_RANGES.enemyBulletSpeed.min,
-        DDA_RANGES.enemyBulletSpeed.max
+        enemyBulletSpeed + ranges.enemyBulletSpeed.step,
+        ranges.enemyBulletSpeed.min,
+        ranges.enemyBulletSpeed.max
       );
       this.lastBulletMessage = canChangeCount
         ? 'LOW THREAT — TIGHTENING BULLETS'
@@ -153,21 +170,24 @@ export class AIDirector {
     const prev = { ...this.state };
     let { spawnIntervalMs } = this.state;
     let killRate = null;
+    const target = this.config.targets.killRate;
+    const margin = this.config.thresholds.killRateMargin;
+    const r = this.config.ranges.spawnIntervalMs;
 
     if (period.spawned > 0) {
       killRate = period.killed / period.spawned;
-      if (killRate > DDA_TARGETS.killRate + 0.08) {
+      if (killRate > target + margin) {
         spawnIntervalMs = clamp(
-          spawnIntervalMs - DDA_RANGES.spawnIntervalMs.step,
-          DDA_RANGES.spawnIntervalMs.min,
-          DDA_RANGES.spawnIntervalMs.max
+          spawnIntervalMs - r.step,
+          r.min,
+          r.max
         );
         this.lastSpawnMessage = 'HIGH KILL RATE — MORE ENEMIES';
-      } else if (killRate < DDA_TARGETS.killRate - 0.08) {
+      } else if (killRate < target - margin) {
         spawnIntervalMs = clamp(
-          spawnIntervalMs + DDA_RANGES.spawnIntervalMs.step,
-          DDA_RANGES.spawnIntervalMs.min,
-          DDA_RANGES.spawnIntervalMs.max
+          spawnIntervalMs + r.step,
+          r.min,
+          r.max
         );
         this.lastSpawnMessage = 'LOW KILL RATE — FEWER ENEMIES';
       } else {
@@ -191,7 +211,7 @@ export class AIDirector {
         periodSpawned: period.spawned,
         periodKilled: period.killed,
         killRate: killRate !== null ? round2(killRate * 100) : null,
-        targetKillRatePct: DDA_TARGETS.killRate * 100,
+        targetKillRatePct: round2(target * 100),
         trend:
           spawnDelta < 0 ? 'up' : spawnDelta > 0 ? 'down' : 'hold',
         delta: spawnDelta,
@@ -210,7 +230,7 @@ export class AIDirector {
     return {
       enemySpeedMin: round2(1.5 * FIXED.enemyMoveSpeedMult),
       enemySpeedMax: round2(3.5 * FIXED.enemyMoveSpeedMult),
-      targetKillRatePct: DDA_TARGETS.killRate * 100,
+      targetKillRatePct: round2(this.config.targets.killRate * 100),
     };
   }
 }

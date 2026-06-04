@@ -139,6 +139,17 @@ canvas {
   overflow-y: auto;
 }
 
+.overlay-content-start {
+  max-width: 560px;
+  max-height: 92vh;
+  overflow-y: auto;
+  padding: 40px 36px;
+}
+
+.overlay-content-start .neon-text {
+  font-size: 2.2rem;
+}
+
 .hidden {
   opacity: 0;
   pointer-events: none;
@@ -307,6 +318,13 @@ canvas {
   margin-bottom: 12px;
   line-height: 1.4;
   font-size: 0.7rem;
+}
+
+.dda-disabled-note {
+  color: var(--neon-pink);
+  font-size: 0.68rem;
+  margin: -6px 0 12px;
+  line-height: 1.4;
 }
 
 .dda-trend {

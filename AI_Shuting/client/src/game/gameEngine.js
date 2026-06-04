@@ -5,9 +5,11 @@
 
 import { AIDirector } from './aiDirector';
 import {
+  createDefaultDdaSettings,
+  normalizeDdaSettings,
+} from './ddaSettings';
+import {
   BULLET_ANGLE_JITTER_RAD,
-  DDA_RANGES,
-  DDA_TIMING,
   ENEMY_BULLET_COLOR,
   ENEMY_SHOT_ARC,
   ENEMY_SPAWN,
@@ -67,7 +69,8 @@ export function createGameEngine(canvas, callbacks) {
   let rafId = null;
   let gameStartTime = 0;
   let ddaHistory = [];
-  const director = new AIDirector();
+  let ddaSettings = createDefaultDdaSettings();
+  const director = new AIDirector(ddaSettings);
 
   class Player {
     constructor() {
@@ -113,16 +116,20 @@ export function createGameEngine(canvas, callbacks) {
   }
 
   function snapshotBulletProfile() {
+    const r = ddaSettings.ranges;
     const speed =
       difficulty.enemyBulletSpeed ?? FIXED.defaultEnemyBulletSpeed;
     return {
-      count: clampEvenBulletCount(difficulty.enemyBulletCount),
+      count: clampEvenBulletCount(
+        difficulty.enemyBulletCount,
+        r.enemyBulletCount
+      ),
       speed,
       fireIntervalMs: clampMs(
         difficulty.enemyFireIntervalMs,
-        400,
-        4000,
-        1600
+        r.enemyFireIntervalMs.min,
+        r.enemyFireIntervalMs.max,
+        ddaSettings.initial.enemyFireIntervalMs
       ),
     };
   }
@@ -300,26 +307,30 @@ export function createGameEngine(canvas, callbacks) {
   }
 
   function sanitizeDifficultyState(state) {
+    const r = ddaSettings.ranges;
+    const init = ddaSettings.initial;
     const s = { ...state };
     s.spawnIntervalMs = clampMs(
       s.spawnIntervalMs,
-      400,
-      5000,
-      1200
+      r.spawnIntervalMs.min,
+      r.spawnIntervalMs.max,
+      init.spawnIntervalMs
     );
     s.enemyFireIntervalMs = clampMs(
       s.enemyFireIntervalMs,
-      400,
-      4000,
-      1600
+      r.enemyFireIntervalMs.min,
+      r.enemyFireIntervalMs.max,
+      init.enemyFireIntervalMs
     );
-    const speedMin = DDA_RANGES.enemyBulletSpeed.min;
-    const speedMax = DDA_RANGES.enemyBulletSpeed.max;
     s.enemyBulletSpeed = Number.isFinite(s.enemyBulletSpeed)
-      ? Math.max(speedMin, Math.min(speedMax, s.enemyBulletSpeed))
-      : FIXED.defaultEnemyBulletSpeed;
+      ? Math.max(
+          r.enemyBulletSpeed.min,
+          Math.min(r.enemyBulletSpeed.max, s.enemyBulletSpeed)
+        )
+      : init.enemyBulletSpeed;
     s.enemyBulletCount = clampEvenBulletCount(
-      s.enemyBulletCount ?? 4
+      s.enemyBulletCount ?? init.enemyBulletCount,
+      r.enemyBulletCount
     );
     return s;
   }
@@ -345,14 +356,17 @@ export function createGameEngine(canvas, callbacks) {
   }
 
   function buildDdaPayload(message, metrics = {}) {
+    const display = director.getDisplayMetrics();
     return {
       message,
+      ddaEnabled: ddaSettings.enabled,
       spawnIntervalMs: difficulty.spawnIntervalMs,
       enemyBulletSpeed: difficulty.enemyBulletSpeed,
       enemyBulletCount: difficulty.enemyBulletCount,
       enemyFireIntervalMs: difficulty.enemyFireIntervalMs,
-      enemySpeedMin: 1.5 * FIXED.enemyMoveSpeedMult,
-      enemySpeedMax: 3.5 * FIXED.enemyMoveSpeedMult,
+      enemySpeedMin: display.enemySpeedMin,
+      enemySpeedMax: display.enemySpeedMax,
+      targetKillRatePct: display.targetKillRatePct,
       trend: 'hold',
       delta: 0,
       ...metrics,
@@ -385,7 +399,9 @@ export function createGameEngine(canvas, callbacks) {
     ddaHistory = [];
     recordDdaSnapshot(0);
     updateHUD();
-    emitDifficultyState('INITIALIZING...');
+    emitDifficultyState(
+      ddaSettings.enabled ? 'INITIALIZING...' : 'DDA OFF — FIXED DIFFICULTY'
+    );
   }
 
   function scheduleNextSpawn() {
@@ -406,17 +422,14 @@ export function createGameEngine(canvas, callbacks) {
 
   function publishDda(metrics = {}) {
     syncDifficultyFromDirector();
-    onDifficultyUpdate?.({
-      message: director.getCombinedMessage(),
-      ...buildDdaPayload(director.getCombinedMessage(), {
-        ...director.getDisplayMetrics(),
-        ...metrics,
-      }),
-    });
+    const message = ddaSettings.enabled
+      ? director.getCombinedMessage()
+      : 'DDA OFF — FIXED DIFFICULTY';
+    onDifficultyUpdate?.(buildDdaPayload(message, metrics));
   }
 
   function runBulletAdjust(now = performance.now()) {
-    if (!gameActive) return;
+    if (!gameActive || !ddaSettings.enabled) return;
     const result = director.adjustBullets(bulletPeriodStats, now);
     bulletPeriodStats = { hits: 0 };
     syncDifficultyFromDirector();
@@ -425,7 +438,7 @@ export function createGameEngine(canvas, callbacks) {
   }
 
   function runSpawnAdjust(now = performance.now()) {
-    if (!gameActive) return;
+    if (!gameActive || !ddaSettings.enabled) return;
     const prevSpawn = difficulty.spawnIntervalMs;
     const result = director.adjustSpawn(spawnPeriodStats);
     spawnPeriodStats = { spawned: 0, killed: 0 };
@@ -478,11 +491,12 @@ export function createGameEngine(canvas, callbacks) {
     try {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      if (time - lastBulletAdjust >= DDA_TIMING.cycleMs) {
+      const cycleMs = ddaSettings.timing.cycleMs;
+      if (ddaSettings.enabled && time - lastBulletAdjust >= cycleMs) {
         runBulletAdjust(time);
         lastBulletAdjust = time;
       }
-      if (time - lastSpawnAdjust >= DDA_TIMING.cycleMs) {
+      if (ddaSettings.enabled && time - lastSpawnAdjust >= cycleMs) {
         runSpawnAdjust(time);
         lastSpawnAdjust = time;
       }
@@ -604,16 +618,21 @@ export function createGameEngine(canvas, callbacks) {
     canvas.height = window.innerHeight;
   }
 
-  function start() {
+  function start(settings) {
     gameActive = false;
     if (spawnTimeoutId) clearTimeout(spawnTimeoutId);
     if (rafId) cancelAnimationFrame(rafId);
+    if (settings) {
+      ddaSettings = normalizeDdaSettings(settings);
+      director.applySettings(ddaSettings);
+    }
     gameActive = true;
     const now = performance.now();
     init();
     gameStartTime = now;
     lastBulletAdjust = now;
-    lastSpawnAdjust = now + DDA_TIMING.spawnLagMs - DDA_TIMING.cycleMs;
+    lastSpawnAdjust =
+      now + ddaSettings.timing.spawnLagMs - ddaSettings.timing.cycleMs;
     scheduleNextSpawn();
     rafId = requestAnimationFrame(animate);
   }
