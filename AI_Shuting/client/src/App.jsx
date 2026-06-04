@@ -4,6 +4,12 @@ import { createDefaultDdaSettings } from './game/ddaSettings';
 import DifficultyPanel from './components/DifficultyPanel';
 import DifficultyHistoryChart from './components/DifficultyHistoryChart';
 import DdaSettingsPanel from './components/DdaSettingsPanel';
+import ControlSettingsPanel from './components/ControlSettingsPanel';
+import TouchControls from './components/TouchControls';
+import {
+  createDefaultGameSettings,
+  normalizeGameSettings,
+} from './game/gameSettings';
 import './App.css';
 
 const INITIAL_HUD = {
@@ -41,6 +47,7 @@ export default function App() {
   const [hud, setHud] = useState(INITIAL_HUD);
   const [dda, setDda] = useState(INITIAL_DDA);
   const [ddaSettings, setDdaSettings] = useState(createDefaultDdaSettings);
+  const [gameSettings, setGameSettings] = useState(createDefaultGameSettings);
   const [finalStats, setFinalStats] = useState({
     score: 0,
     accuracy: '0%',
@@ -57,6 +64,7 @@ export default function App() {
   }, []);
 
   const handleGameOver = useCallback((stats) => {
+    engineRef.current?.clearVirtualKeys();
     setFinalStats(stats);
     setPlaying(false);
     setShowFinal(true);
@@ -131,6 +139,10 @@ export default function App() {
 
       <DifficultyPanel dda={dda} visible={playing} />
 
+      {playing && gameSettings.touchControlsEnabled && (
+        <TouchControls engineRef={engineRef} />
+      )}
+
       <div className={`overlay ${showStart ? '' : 'hidden'}`}>
         <div className="overlay-content glass overlay-content-start">
           <h1 className="neon-text">AI NEON BLASTER</h1>
@@ -138,7 +150,13 @@ export default function App() {
             AIがあなたのプレイを監視し、リアルタイムで難易度を最適化します。
             <br />
             [W/A/S/D] 移動 | [SPACE] 攻撃
+            <br />
+            スマホ・タブレットは設定でタッチボタンを表示
           </p>
+          <ControlSettingsPanel
+            settings={gameSettings}
+            onChange={(next) => setGameSettings(normalizeGameSettings(next))}
+          />
           <DdaSettingsPanel
             settings={ddaSettings}
             onChange={setDdaSettings}

@@ -301,6 +301,8 @@ canvas {
   right: 20px;
   bottom: 20px;
   width: 280px;
+  max-height: calc(100% - 200px);
+  overflow-y: auto;
   padding: 16px;
   z-index: 10;
   font-size: 0.75rem;
@@ -325,6 +327,20 @@ canvas {
   font-size: 0.68rem;
   margin: -6px 0 12px;
   line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+  .game-app:has(.touch-controls) .dda-panel {
+    top: 96px;
+    bottom: auto;
+    right: 12px;
+    width: min(260px, calc(100% - 180px));
+    max-height: 38vh;
+  }
+
+  .game-app:has(.touch-controls) .hud {
+    font-size: 0.85rem;
+  }
 }
 
 .dda-trend {

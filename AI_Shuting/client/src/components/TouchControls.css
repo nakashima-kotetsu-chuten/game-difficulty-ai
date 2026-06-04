@@ -1,0 +1,106 @@
+.touch-controls {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+  touch-action: none;
+}
+
+.touch-dpad {
+  position: absolute;
+  left: max(12px, env(safe-area-inset-left));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  width: 148px;
+  height: 148px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+  gap: 6px;
+  pointer-events: auto;
+}
+
+.touch-btn {
+  border: 1px solid rgba(0, 242, 255, 0.35);
+  background: rgba(10, 10, 18, 0.42);
+  color: rgba(0, 242, 255, 0.85);
+  font-family: 'Orbitron', sans-serif;
+  border-radius: 12px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: background 0.1s ease, border-color 0.1s ease;
+}
+
+.touch-btn:active,
+.touch-btn:focus-visible {
+  background: rgba(0, 242, 255, 0.22);
+  border-color: var(--neon-blue);
+  outline: none;
+}
+
+.touch-btn-dir {
+  font-size: 1.1rem;
+  padding: 0;
+  min-height: 44px;
+}
+
+.touch-btn-up {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.touch-btn-left {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.touch-btn-down {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.touch-btn-right {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.touch-btn-fire {
+  position: absolute;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(24px, env(safe-area-inset-bottom));
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  font-size: 0.7rem;
+  letter-spacing: 1px;
+  border-color: rgba(255, 34, 68, 0.45);
+  color: rgba(255, 100, 120, 0.95);
+  background: rgba(10, 10, 18, 0.45);
+  pointer-events: auto;
+  box-shadow: 0 0 20px rgba(255, 34, 68, 0.15);
+}
+
+.touch-btn-fire:active,
+.touch-btn-fire:focus-visible {
+  background: rgba(255, 34, 68, 0.28);
+  border-color: var(--neon-red);
+}
+
+@media (min-width: 900px) and (pointer: fine) {
+  .touch-controls {
+    /* デスクトップではやや小さめ（有効時のみ表示） */
+  }
+
+  .touch-dpad {
+    width: 132px;
+    height: 132px;
+  }
+
+  .touch-btn-fire {
+    width: 80px;
+    height: 80px;
+  }
+}

@@ -597,13 +597,32 @@ export function createGameEngine(canvas, callbacks) {
     }
   }
 
+  function firePlayerBullet() {
+    if (!gameActive || !player) return;
+    playerBullets.push(
+      new PlayerBullet(player.x + player.width / 2, player.y)
+    );
+    stats.shots_fired++;
+  }
+
+  function setVirtualKey(key, pressed) {
+    const k = key.toLowerCase();
+    if (['w', 'a', 's', 'd'].includes(k)) {
+      keys[k] = pressed;
+    }
+  }
+
+  function clearVirtualKeys() {
+    keys['w'] = false;
+    keys['a'] = false;
+    keys['s'] = false;
+    keys['d'] = false;
+  }
+
   function onKeyDown(e) {
     if (e.code === 'Space' && gameActive) {
       e.preventDefault();
-      playerBullets.push(
-        new PlayerBullet(player.x + player.width / 2, player.y)
-      );
-      stats.shots_fired++;
+      firePlayerBullet();
       return;
     }
     keys[e.key.toLowerCase()] = true;
@@ -622,6 +641,7 @@ export function createGameEngine(canvas, callbacks) {
     gameActive = false;
     if (spawnTimeoutId) clearTimeout(spawnTimeoutId);
     if (rafId) cancelAnimationFrame(rafId);
+    clearVirtualKeys();
     if (settings) {
       ddaSettings = normalizeDdaSettings(settings);
       director.applySettings(ddaSettings);
@@ -639,6 +659,7 @@ export function createGameEngine(canvas, callbacks) {
 
   function destroy() {
     gameActive = false;
+    clearVirtualKeys();
     if (spawnTimeoutId) clearTimeout(spawnTimeoutId);
     if (rafId) cancelAnimationFrame(rafId);
     window.removeEventListener('keydown', onKeyDown);
@@ -654,5 +675,12 @@ export function createGameEngine(canvas, callbacks) {
     canvas.height = window.innerHeight;
   }
 
-  return { mount, start, destroy };
+  return {
+    mount,
+    start,
+    destroy,
+    setVirtualKey,
+    clearVirtualKeys,
+    firePlayerBullet,
+  };
 }
