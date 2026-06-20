@@ -1,0 +1,257 @@
+.dda-settings-panel {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto 20px;
+  text-align: left;
+}
+
+.dda-initial-block {
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+}
+
+.dda-initial-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.dda-initial-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 2px;
+  color: var(--neon-blue);
+}
+
+.dda-initial-badge {
+  font-size: 0.6rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(0, 242, 255, 0.15);
+  color: var(--neon-blue);
+}
+
+.dda-initial-note {
+  margin-bottom: 10px;
+}
+
+.dda-initial-note strong {
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 600;
+}
+
+.dda-initial-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dda-initial-summary {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 10px 0 8px;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 0.5px;
+}
+
+.dda-settings-reset-inline {
+  margin-top: 0;
+  font-size: 0.65rem;
+  padding: 8px;
+}
+
+.dda-settings-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: rgba(0, 242, 255, 0.08);
+  border: 1px solid rgba(0, 242, 255, 0.35);
+  border-radius: 8px;
+  color: var(--neon-blue);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.dda-settings-toggle:hover {
+  background: rgba(0, 242, 255, 0.15);
+  border-color: var(--neon-blue);
+}
+
+.dda-settings-badge {
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.dda-settings-badge.on {
+  background: rgba(57, 255, 20, 0.2);
+  color: var(--neon-green);
+}
+
+.dda-settings-badge.off {
+  background: rgba(255, 34, 68, 0.2);
+  color: var(--neon-red);
+}
+
+.dda-settings-body {
+  margin-top: 12px;
+  padding: 16px 18px;
+  max-height: min(52vh, 420px);
+  overflow-y: auto;
+  border-radius: 12px;
+}
+
+.dda-enable-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.dda-enable-row input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--neon-blue);
+}
+
+.dda-settings-note {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.55);
+  margin-bottom: 14px;
+  line-height: 1.4;
+}
+
+.dda-settings-section {
+  border: none;
+  margin: 0 0 14px;
+  padding: 0;
+}
+
+.dda-settings-section:disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.dda-settings-section legend {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 2px;
+  color: var(--neon-pink);
+  margin-bottom: 8px;
+  padding: 0;
+}
+
+.dda-setting-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 0.8rem;
+}
+
+.dda-setting-row-compact {
+  grid-template-columns: 72px 1fr;
+}
+
+.dda-setting-label {
+  color: rgba(255, 255, 255, 0.85);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dda-setting-hint {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  font-size: 0.6rem;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.6);
+  cursor: help;
+}
+
+.dda-setting-control {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dda-setting-control input {
+  width: 72px;
+  padding: 4px 6px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  color: var(--neon-blue);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+}
+
+.dda-setting-control input:focus {
+  outline: none;
+  border-color: var(--neon-blue);
+}
+
+.dda-setting-unit {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.45);
+  min-width: 1.5em;
+}
+
+.dda-range-block {
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.dda-range-block:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.dda-range-title {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 6px;
+}
+
+.dda-range-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dda-settings-reset {
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.75);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dda-settings-reset:hover {
+  border-color: var(--neon-pink);
+  color: var(--neon-pink);
+}

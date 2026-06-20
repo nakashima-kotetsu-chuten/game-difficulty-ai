@@ -1,0 +1,59 @@
+.control-settings {
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  text-align: left;
+}
+
+.control-settings-header {
+  margin-bottom: 8px;
+}
+
+.control-settings-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 2px;
+  color: var(--neon-pink);
+}
+
+.control-enable-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.control-enable-row input {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  accent-color: var(--neon-pink);
+}
+
+.control-settings-note {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 8px 0 10px;
+  line-height: 1.4;
+}
+
+.control-settings-reset {
+  width: 100%;
+  padding: 8px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.75);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+.control-settings-reset:hover {
+  border-color: var(--neon-pink);
+  color: var(--neon-pink);
+}
